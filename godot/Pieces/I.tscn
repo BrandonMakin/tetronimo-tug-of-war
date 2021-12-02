@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://tileset.tres" type="TileSet" id=1]
+[ext_resource path="res://Pieces/Piece.gd" type="Script" id=2]
+
+[node name="I" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="Rotation 0" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 65536, 0, 0, 65537, 0, 0, 65538, 0, 0, 65539, 0, 0 )
+
+[node name="Rotation 1" type="TileMap" parent="."]
+visible = false
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 2, 0, 0, 65538, 0, 0, 131074, 0, 0, 196610, 0, 0 )
