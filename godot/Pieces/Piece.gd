@@ -15,8 +15,15 @@ func _ready():
 
 # Rotate clockwise
 func rotate_cw():
-	_current_shape_index = (_current_shape_index + 1) % _shape_count
+	_update_current_shape(posmod(_current_shape_index + 1, _shape_count))
 
 # Rotate counterclockwise
 func rotate_ccw():
-	_current_shape_index = (_current_shape_index - 1) % _shape_count
+	_update_current_shape(posmod(_current_shape_index - 1, _shape_count))
+
+func _update_current_shape(shape_index: int) -> void:
+	current_shape.visible = false
+	_current_shape_index = shape_index
+	current_shape = get_child(_current_shape_index)
+	current_shape.visible = true
+	

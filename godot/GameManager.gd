@@ -19,7 +19,11 @@ var pieceScene: PackedScene
 var pos: Vector2
 var piece: Piece
 var fallingTimer: float = 0
-var secondsBetweenFalling: float = .2
+var shiftingTimer: float = 0
+var falling_timing_interval: float = .4
+var soft_falling_timing_interval: float = .1
+var shifting_time_interval: float = .08
+var soft_falling: bool = false
 
 onready var bag = range(7)
 
@@ -34,21 +38,35 @@ func _ready():
 	add_child(piece)
 	pos = Vector2(3, 0)
 	_update_block_pos()
-	print(-1 % 3)
-#	wrapi
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
+func _process(delta: float) -> void:
+	_do_fall(delta)
+	_do_shift(delta)
+	
+func _do_fall(delta: float) -> void:
 	fallingTimer += delta
-	if fallingTimer >= secondsBetweenFalling:
+	soft_falling = Input.is_action_pressed("soft_drop")
+	if (soft_falling and fallingTimer >= soft_falling_timing_interval) or (!soft_falling and fallingTimer >= falling_timing_interval):
 		_drop_block()
 		fallingTimer = 0
 
+func _do_shift(delta: float) -> void:
+	var shift := Input.get_axis("shift_left", "shift_right")
+	if shift:
+		shiftingTimer += delta
+		if shiftingTimer >= shifting_time_interval:
+			shiftingTimer = 0
+			pos.x += shift
+			_update_block_pos()
+
 func _input(event):
-	if event.is_action("rotate_cw"):
+	if event.is_action_pressed("rotate_cw"):
 		piece.rotate_cw()
-	if event.is_action("rotate_ccw"):
+	if event.is_action_pressed("rotate_ccw"):
 		piece.rotate_ccw()
+	if event.is_action_pressed("hard_drop"):
+		_do_hard_drop()
 
 func _update_block_pos() -> void:
 	piece.position = pos * block_size + block_topleft_offset
@@ -60,4 +78,8 @@ func _drop_block() -> void:
 
 func _block_can_fall() -> bool:
 	var bounding_box := piece.current_shape.get_used_rect()
-	return pos.y < 20 - bounding_box.size.y
+	return pos.y < 21 - bounding_box.size.y - bounding_box.position.y
+
+func _do_hard_drop() -> void:
+	for i in range(20):
+		_drop_block()
