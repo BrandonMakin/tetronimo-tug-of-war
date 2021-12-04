@@ -3,6 +3,7 @@ class_name Piece
 
 onready var current_shape: TileMap = get_child(0);
 onready var _shape_count = get_child_count()
+
 var _current_shape_index: int = 0
 
 # Called when the node enters the scene tree for the first time.
@@ -27,3 +28,5 @@ func _update_current_shape(shape_index: int) -> void:
 	current_shape = get_child(_current_shape_index)
 	current_shape.visible = true
 	
+func get_cells() -> Array:
+	return current_shape.get_used_cells()

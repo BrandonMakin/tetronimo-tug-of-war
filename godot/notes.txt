@@ -1,0 +1,1 @@
+2 player tetronimo game. blocks fall horizontally. you try to destroy so many blocks that you're destroying rows that the other person originally created.  the goal is to somehow get past your opponent's goal line (alt name for the goal line: end zone)

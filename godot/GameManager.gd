@@ -4,6 +4,7 @@ enum Piece {I, J, L, O, S, T, Z}
 
 const block_size: int = 16
 const block_topleft_offset: Vector2 = Vector2(16, 32)
+const starting_pos = Vector2(3, 0)
 
 var pieceScenes: Array = [
 	preload("res://Pieces/I.tscn"),
@@ -26,18 +27,14 @@ var shifting_time_interval: float = .08
 var soft_falling: bool = false
 
 onready var bag = range(7)
+onready var game_grid: TileMap = $"../Dropped Pieces"
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	randomize()
 	bag.shuffle()
 	
-	pieceScene = pieceScenes[bag[bagIndex]]
-	bagIndex += 1
-	piece = pieceScene.instance() as Node2D
-	add_child(piece)
-	pos = Vector2(3, 0)
-	_update_block_pos()
+	_spawn_next_piece()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -52,13 +49,15 @@ func _do_fall(delta: float) -> void:
 		fallingTimer = 0
 
 func _do_shift(delta: float) -> void:
-	var shift := Input.get_axis("shift_left", "shift_right")
+	var shift := int(Input.get_axis("shift_left", "shift_right"))
 	if shift:
 		shiftingTimer += delta
 		if shiftingTimer >= shifting_time_interval:
 			shiftingTimer = 0
-			pos.x += shift
-			_update_block_pos()
+			var shiftv = Vector2(shift, 0)
+			if !_piece_collides_with_wall(shiftv) && !_piece_collides_with_tiles(shiftv):
+				pos.x += shift
+				_update_block_pos()
 
 func _input(event):
 	if event.is_action_pressed("rotate_cw"):
@@ -78,8 +77,48 @@ func _drop_block() -> void:
 
 func _block_can_fall() -> bool:
 	var bounding_box := piece.current_shape.get_used_rect()
-	return pos.y < 21 - bounding_box.size.y - bounding_box.position.y
+	return !_piece_collides_with_floor(Vector2(0, 1)) && !_piece_collides_with_tiles(Vector2(0,1))
 
 func _do_hard_drop() -> void:
-	for i in range(20):
+	for _i in range(20):
 		_drop_block()
+	_place_block()
+
+func _place_block() -> void:
+	var cells := piece.get_cells()
+	for cell in cells:
+		game_grid.set_cellv(cell + pos, 0)
+	_spawn_next_piece()
+
+func _spawn_next_piece() -> void:
+	if piece:
+		piece.queue_free()
+	pieceScene = pieceScenes[bag[bagIndex]]
+	bagIndex = (bagIndex + 1) % 7
+	piece = pieceScene.instance() as Node2D
+	add_child(piece)
+	pos = starting_pos
+	_update_block_pos()
+
+#func _piece_collides(offset: Vector2) -> bool:
+#	return _piece_collides_with_floor(offset) && \
+#	_piece_collides_with_right_wall(offset) && \
+#	_piece_collides_with_tiles(offset)
+
+func _piece_collides_with_tiles(offset: Vector2) -> bool:
+	for cell in piece.get_cells():
+		if game_grid.get_cellv(cell + pos + offset) != TileMap.INVALID_CELL:
+			return true
+	return false
+
+func _piece_collides_with_floor(offset: Vector2) -> bool:
+	var bounding_box := piece.current_shape.get_used_rect()
+	return pos.y + offset.y > 21 - bounding_box.end.y
+
+func _piece_collides_with_wall(offset: Vector2) -> bool:
+	var bounding_box := piece.current_shape.get_used_rect()
+	if pos.x + offset.x > 10 - bounding_box.end.x:
+		return true
+	elif pos.x + offset.x + bounding_box.position.x < 0:
+		return true
+	return false
