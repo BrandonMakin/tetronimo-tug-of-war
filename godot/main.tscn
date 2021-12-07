@@ -5,7 +5,13 @@
 
 [node name="Main" type="Node2D"]
 
+[node name="Falling Piece Coords" type="Node2D" parent="."]
+position = Vector2( 16, 48 )
+scale = Vector2( 16, 16 )
+z_index = 1
+
 [node name="GameManager" type="Node2D" parent="."]
+position = Vector2( 16, 48 )
 z_index = 1
 script = ExtResource( 2 )
 
@@ -25,14 +31,14 @@ cell_size = Vector2( 16, 16 )
 format = 1
 tile_data = PoolIntArray( 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0, 6, 0, 0, 7, 0, 0, 8, 0, 0, 9, 0, 0, 65536, 0, 0, 65537, 0, 0, 65538, 0, 0, 65539, 0, 0, 65540, 0, 0, 65541, 0, 0, 65542, 0, 0, 65543, 0, 0, 65544, 0, 0, 65545, 0, 0 )
 
-[node name="Dropped Pieces" type="TileMap" parent="."]
-position = Vector2( 16, 32 )
+[node name="Game Grid" type="TileMap" parent="."]
+position = Vector2( 16, 48 )
 tile_set = ExtResource( 1 )
 cell_size = Vector2( 16, 16 )
 format = 1
 
 [node name="Border" type="TileMap" parent="."]
-modulate = Color( 0.309804, 0.309804, 0.309804, 1 )
+modulate = Color( 0.309804, 0.309804, 0.309804, 0.490196 )
 position = Vector2( 16, 48 )
 tile_set = ExtResource( 1 )
 cell_size = Vector2( 16, 16 )

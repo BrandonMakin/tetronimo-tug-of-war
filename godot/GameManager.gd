@@ -2,9 +2,8 @@ extends Node2D
 
 enum Piece {I, J, L, O, S, T, Z}
 
-const block_size: int = 16
-const block_topleft_offset: Vector2 = Vector2(16, 32)
-const starting_pos = Vector2(3, 0)
+#const starting_pos = Vector2(3, -1)
+const starting_pos = Vector2(0, 0)
 
 var pieceScenes: Array = [
 	preload("res://Pieces/I.tscn"),
@@ -26,8 +25,11 @@ var soft_falling_timing_interval: float = .1
 var shifting_time_interval: float = .08
 var soft_falling: bool = false
 
+var cells_to_draw := []
+var cell_color_to_draw := Color.coral
+
 onready var bag = range(7)
-onready var game_grid: TileMap = $"../Dropped Pieces"
+onready var game_grid: TileMap = $"../Game Grid"
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -67,9 +69,11 @@ func _input(event):
 		piece.rotate_ccw()
 	if event.is_action_pressed("hard_drop"):
 		_do_hard_drop()
+	if event is InputEventKey and event.scancode == KEY_Z:
+		print(piece.bounds)
 
 func _update_piece_pos() -> void:
-	piece.position = pos * block_size + block_topleft_offset
+	piece.position = pos
 
 func _drop_piece() -> void:
 	if _piece_can_fall():
@@ -82,10 +86,8 @@ func _piece_can_fall() -> bool:
 func _piece_can_rotate(rotation) -> bool:
 	for cell in piece.get_cells_after_rotation(rotation):
 		if _tile_collides_with_wall(cell + pos):
-			print("oh?")
 			return false
 		if game_grid.get_cellv(cell + pos) != TileMap.INVALID_CELL:
-			print("woooah")
 			return false
 	return true
 
@@ -97,7 +99,9 @@ func _do_hard_drop() -> void:
 func _place_piece() -> void:
 	var cells := piece.get_cells()
 	for cell in cells:
+		print(pos, ", ", cell)
 		game_grid.set_cellv(cell + pos, 0)
+	_clear_lines_if_needed()
 	_spawn_next_piece()
 
 func _spawn_next_piece() -> void:
@@ -106,14 +110,10 @@ func _spawn_next_piece() -> void:
 	pieceScene = pieceScenes[bag[bagIndex]]
 	bagIndex = (bagIndex + 1) % 7
 	piece = pieceScene.instance() as Node2D
-	add_child(piece)
+	piece.scale = Vector2.ONE * 1.0/16
+	$"../Falling Piece Coords".add_child(piece)
 	pos = starting_pos
 	_update_piece_pos()
-
-#func _piece_collides(offset: Vector2) -> bool:
-#	return _piece_collides_with_floor(offset) && \
-#	_piece_collides_with_right_wall(offset) && \
-#	_piece_collides_with_tiles(offset)
 
 func _piece_collides_with_tiles(offset: Vector2) -> bool:
 	for cell in piece.get_cells():
@@ -122,11 +122,11 @@ func _piece_collides_with_tiles(offset: Vector2) -> bool:
 	return false
 
 func _piece_collides_with_floor(offset: Vector2) -> bool:
-	var bounding_box := piece.current_shape.get_used_rect()
-	return pos.y + offset.y > 21 - bounding_box.end.y
+	var bounding_box := piece.bounds
+	return pos.y + bounding_box.end.y + offset.y > 20
 
 func _piece_collides_with_wall(offset: Vector2) -> bool:
-	var bounding_box := piece.current_shape.get_used_rect()
+	var bounding_box := piece.bounds
 	if pos.x + offset.x > 10 - bounding_box.end.x:
 		return true
 	elif pos.x + offset.x + bounding_box.position.x < 0:
@@ -136,7 +136,37 @@ func _piece_collides_with_wall(offset: Vector2) -> bool:
 func _tile_collides_with_wall(point: Vector2) -> bool:
 	return point.x < 0 or point.x > 9
 
+func _clear_lines_if_needed() -> void: # This function could be made faster, I think.
+	for y_within_piece in range(piece.bounds.size.y, 0, -1):
+		var should_clear_line := true
+		for x in range(10):
+			print("hi")
+			cells_to_draw = [Vector2(x, y_within_piece + pos.y)]
+			cell_color_to_draw = Color.coral
+				
+			if game_grid.get_cell(x, y_within_piece + pos.y) == TileMap.INVALID_CELL:
+				
+				cell_color_to_draw = Color.red
+				
+				should_clear_line = false
+				break
+			print("bye")
+			yield(get_tree().create_timer(.1), "timeout")
+		yield(get_tree().create_timer(.1), "timeout")
+		if should_clear_line:
+			print("owo -> " + str(y_within_piece + pos.y - 1))
+			for x in range(10):
+				for y in range(y_within_piece + pos.y, 0, -1):
+					var above_cell := game_grid.get_cell(x, y-1)
+					game_grid.set_cell(x, y, above_cell)
+	
+
+#func _draw():
+#	for cell in piece.get_cells_after_rotation(piece.Rotation.CLOCKWISE_ONCE):
+#		var c = Rect2((cell + pos)*16, Vector2.ONE*17)
+#		draw_rect(c, Color.coral, false, 1)
+
 func _draw():
-	for cell in piece.get_cells_after_rotation(piece.Rotation.CLOCKWISE_ONCE):
-		var c = Rect2((cell + pos)*16 + block_topleft_offset, Vector2.ONE*17)
-		draw_rect(c, Color.coral, false, 1)
+	for cell in cells_to_draw:
+		var c = Rect2((cell + pos)*16, Vector2.ONE*16)
+		draw_rect(c, cell_color_to_draw, false, 1)

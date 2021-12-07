@@ -16,6 +16,8 @@ enum Rotation {
 	COUNTERCLOCKWISE_ONCE = 3
 }
 
+var bounds: Rect2 setget ,get_bounds
+
 onready var current_shape: TileMap = get_child(0);
 onready var _shape_count = get_child_count()
 
@@ -59,3 +61,6 @@ func get_cells_after_rotation(rotation := Rotation.NO_ROTATION) -> Array:
 
 func get_orientation_from_rotation(rotation):
 	return posmod(_current_shape_index + rotation, _shape_count)
+
+func get_bounds() -> Rect2:
+	return current_shape.get_used_rect()
