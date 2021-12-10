@@ -89,7 +89,7 @@ func _piece_can_rotate(rotation) -> bool:
 			return false
 	return true
 
-func update_shadow_position():
+func update_shadow_position() -> void:
 	shadow_piece.position = piece.position
 	for _i in range(20):
 		_drop_piece(shadow_piece)
@@ -110,7 +110,10 @@ func _spawn_next_piece() -> void:
 	if piece:
 		piece.queue_free()
 	pieceScene = pieceScenes[bag[bagIndex]]
-	bagIndex = (bagIndex + 1) % 7
+	bagIndex = bagIndex + 1
+	if bagIndex == 7:
+		bagIndex = 0
+		bag.shuffle()
 	if shadow_piece != null:
 		shadow_piece.queue_free()
 	piece = pieceScene.instance() as Node2D
