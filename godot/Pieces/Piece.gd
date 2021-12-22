@@ -1,6 +1,16 @@
 extends Node2D
 class_name Piece
 
+enum Type {
+	I,
+	J,
+	L,
+	O,
+	S,
+	T,
+	Z
+}
+
 enum Orientation {
 	UNSPECIFIED = -1,
 	CLOCKWISE_0 = 0,
@@ -15,6 +25,8 @@ enum Rotation {
 	FLIPPED = 2,
 	COUNTERCLOCKWISE_ONCE = 3
 }
+
+export(Type) var type
 
 var bounds: Rect2 setget ,get_bounds
 

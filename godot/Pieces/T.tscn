@@ -5,6 +5,7 @@
 
 [node name="T" type="Node2D"]
 script = ExtResource( 2 )
+type = 5
 
 [node name="Rotation 0" type="TileMap" parent="."]
 tile_set = ExtResource( 1 )
