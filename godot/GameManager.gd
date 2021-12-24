@@ -23,6 +23,7 @@ var falling_timing_interval: float = .4
 var soft_falling_timing_interval: float = .1
 var shifting_time_interval: float = .08
 var soft_falling: bool = false
+var can_hold: bool = true
 
 var cells_to_draw := []
 var cell_color_to_draw := Color.coral
@@ -119,6 +120,12 @@ func _spawn_next_piece() -> void:
 	# remove piece from stockpile
 	# warning-ignore:return_value_discarded
 	stockpile.pop()
+	
+	# let the player use held item
+	can_hold = true
+	if held_piece != null:
+		held_piece.modulate = Color(1, 1, 1)
+	
 
 func _display_stockpile() -> void:
 #	_create_piece(stockpile[0])
@@ -165,6 +172,9 @@ func _clear_lines_if_needed() -> void: # This function could be made faster, I t
 			piece_y += 1
 
 func _hold():
+	if can_hold == false:
+		return
+	
 	if falling_piece == null:
 		return
 	
@@ -180,11 +190,15 @@ func _hold():
 		falling_piece = temp
 		falling_piece.position = starting_pos
 		_spawn_new_shadow_piece(falling_piece.type)
+		falling_piece.modulate = Color.white
 	
 	# (if there is not a held piece) spawn a new piece
 	else:
 		falling_piece = null
 		_spawn_next_piece()
+	
+	can_hold = false
+	held_piece.modulate = Color(.5, .5, .5)
 
 # create a piece of no specified use and add it to the game
 func _create_piece(type: int) -> Piece:
