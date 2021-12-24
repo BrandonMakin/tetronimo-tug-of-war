@@ -13,7 +13,6 @@ var piece_scenes: Array = [
 	preload("res://Pieces/T.tscn"),
 	preload("res://Pieces/Z.tscn")
 ]
-var bag_index: int = 0
 var piece_scene: PackedScene
 var falling_piece: Piece
 var held_piece: Piece
@@ -28,15 +27,13 @@ var soft_falling: bool = false
 var cells_to_draw := []
 var cell_color_to_draw := Color.coral
 
-onready var bag = range(7)
+onready var stockpile: Stockpile = $"../Stockpile"
 onready var game_grid: TileMap = $"../Game Grid"
 onready var grid_coords: Node2D = $"../Falling Piece Coords"
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	randomize()
-	bag.shuffle()
-	
 	_spawn_next_piece()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -75,7 +72,7 @@ func _input(event):
 	if event.is_action_pressed("hard_drop"):
 		_do_hard_drop()
 	if event.is_action_pressed("hold"):
-		hold()
+		_hold()
 
 func _drop_piece(_piece: Piece) -> void:
 	if _piece_can_fall(_piece):
@@ -110,20 +107,24 @@ func _place_piece() -> void:
 	_spawn_next_piece()
 
 func _spawn_next_piece() -> void:
-	# cycle through bag to get next falling_piece type
-	bag_index = bag_index + 1
-	if bag_index == 7:
-		bag_index = 0
-		bag.shuffle()
-	
 	# create falling_piece
 	if falling_piece:
 		falling_piece.queue_free()
-	falling_piece = _create_piece(bag[bag_index])
+	falling_piece = _create_piece(stockpile.get_current_piece_id())
 	falling_piece.position = starting_pos
 	
 	# create shadow falling_piece
-	_spawn_new_shadow_piece(bag[bag_index])
+	_spawn_new_shadow_piece(stockpile.get_current_piece_id())
+	
+	# remove piece from stockpile
+	# warning-ignore:return_value_discarded
+	stockpile.pop()
+
+func _display_stockpile() -> void:
+#	_create_piece(stockpile[0])
+#	_create_piece(stockpile[1])
+#	_create_piece(stockpile[2])
+	pass
 
 func _piece_collides_with_tiles(_piece: Piece, offset: Vector2) -> bool:
 	for cell in _piece.get_cells():
@@ -163,7 +164,7 @@ func _clear_lines_if_needed() -> void: # This function could be made faster, I t
 					game_grid.set_cell(board_x, board_y, above_cell)
 			piece_y += 1
 
-func hold():
+func _hold():
 	if falling_piece == null:
 		return
 	
@@ -171,7 +172,7 @@ func hold():
 	
 	# move falling piece to held spot
 	held_piece = falling_piece
-	held_piece.position = Vector2(-6, -3)
+	held_piece.position = Vector2(-5, -3)
 	held_piece._update_current_shape(0)
 	
 	# (if there is a held piece) move held piece to falling spot
@@ -204,7 +205,7 @@ func _spawn_new_shadow_piece(type: int) -> void:
 #		var c = Rect2((cell + falling_piece.position)*16, Vector2.ONE*17)
 #		draw_rect(c, Color.coral, false, 1)
 
-func _draw():
-	for cell in cells_to_draw:
-		var c = Rect2((cell)*16, Vector2.ONE*16)
-		draw_rect(c, cell_color_to_draw, false, 1)
+#func _draw():
+#	for cell in cells_to_draw:
+#		var c = Rect2((cell)*16, Vector2.ONE*16)
+#		draw_rect(c, cell_color_to_draw, false, 1)
